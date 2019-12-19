@@ -1,0 +1,41 @@
+html{
+    background-color: #181818;
+    color: azure;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+body{
+    margin: 10vh 10px 0 10px;
+    height: 90vh;
+}
+
+h1{
+    text-align: center;
+    font-family: Monoton;
+    font-size: 40pt;
+    margin: auto;
+}
+
+.textContainer{
+    width: 600px;
+    margin: auto;
+}
+
+.textContainer p{
+    margin: 0;
+    margin-top: 10px;
+    text-align: left;
+}
+
+#credits{
+    margin: 0;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
+canvas{
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
