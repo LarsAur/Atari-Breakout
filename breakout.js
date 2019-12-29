@@ -3,6 +3,8 @@ const width = canvas.width;
 const height = canvas.height;
 const ctx = canvas.getContext("2d")
 
+const keydown = [].fill(false, 0, 222)
+
 let blocks = []
 let balls = []
 let bumper = {}
@@ -15,12 +17,27 @@ let blockspace = 3
 let blockwidth = (width - (numblocksx - 1) * blockspace) / numblocksx
 let blockheight = (100 - numblocksy * blockspace) / numblocksy
 
-let keydown = [].fill(false, 0, 222)
-
+// Colors of the block layers
 const layerColor = ["#33658A", "#86BBD8", "#758E4F", "#F6AE2D", "#F26419"]
+
+let windowFocus = true
 
 window.addEventListener("load", load)
 
+window.addEventListener("blur", event => {windowFocus = false})
+
+// on focusgain, reset last rendertime and restart the gameloop
+window.addEventListener("focus", event => {
+    if (!windowFocus) {
+        windowFocus = true
+        window.requestAnimationFrame(currentTime => {
+            lastRenderTime = currentTime
+            gameloop(currentTime)
+        })
+    }
+})
+
+// On keydown set the key as true in the keydown array
 window.addEventListener("keydown", event => {
     if (event.isComposing || event.keyCode === 229) {
         return;
@@ -28,7 +45,7 @@ window.addEventListener("keydown", event => {
     keydown[event.keyCode] = true
 })
 
-
+// On keyup set the key as false in the keydown array
 window.addEventListener("keyup", event => {
     if (event.isComposing || event.keyCode === 229) {
         return;
@@ -36,7 +53,7 @@ window.addEventListener("keyup", event => {
     keydown[event.keyCode] = false
 })
 
-
+// Initializes balls, blocks and the bumper
 function load() {
     balls = []
     bumper = null
@@ -52,14 +69,17 @@ function load() {
     bumper = { x: width / 2, size: 50, speed: 0.3 }
 }
 
-
+// Calculationg time since last gameloop, and calling update and render, together with requesting new animation frame
+// Exits gameloop, if focus is lost
 function gameloop(currentTime) {
     var deltaTime = currentTime - lastRenderTime
     update(deltaTime)
     draw()
 
     lastRenderTime = currentTime
-    window.requestAnimationFrame(gameloop)
+    if(windowFocus){
+        window.requestAnimationFrame(gameloop)
+    }
 }
 
 function update(deltaTime) {
@@ -80,10 +100,10 @@ function update(deltaTime) {
             let collisionData = circleRectangleCollision(ball.x, ball.y, ball.r, block.x, block.y, blockwidth, blockheight)
             if (collisionData.collided) {
                 blocks.splice(i, 1)
-                
-                if(ball.y < block.y + blockheight && ball.y > block.y){
+
+                if (ball.y < block.y + blockheight && ball.y > block.y) {
                     ball.dx *= -1
-                }else{
+                } else {
                     ball.dy *= -1
                 }
 
@@ -103,8 +123,6 @@ function update(deltaTime) {
         ball.dy = ball.dy / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy)
     })
 
-
-
     //A or left
     if (keydown[65] || keydown[37]) {
         bumper.x -= bumper.speed * deltaTime
@@ -119,9 +137,10 @@ function update(deltaTime) {
     if (keydown[82]) {
         load()
     }
-
 }
 
+// Returns a collision object containing information about the collision (currently only true or false)
+// Checks if a circle at cx and cy with radius r collides with a rectangle at rx and ry with width rw and height rh
 function circleRectangleCollision(cx, cy, r, rx, ry, rw, rh) {
     let testX = cx
     let testY = cy
@@ -140,14 +159,18 @@ function circleRectangleCollision(cx, cy, r, rx, ry, rw, rh) {
 }
 
 function draw() {
+    // Background
     ctx.fillStyle = "#111111"
     ctx.fillRect(0, 0, width, height)
 
+    // Blocks
     blocks.forEach(block => {
+        // Calculates the layer based on y-value
         ctx.fillStyle = layerColor[(block.y - 20) / (blockheight + blockspace)]
         ctx.fillRect(block.x, block.y, blockwidth, blockheight)
     })
 
+    // Balls
     ctx.fillStyle = "#eeeeee"
     balls.forEach(ball => {
         ctx.beginPath()
@@ -156,6 +179,8 @@ function draw() {
         ctx.fill()
     })
 
+    // Bumper
+    // The bumper has a height of 15px and is centered at bumper x with the width of 2*bumper.size
     ctx.fillStyle = "#cccccc"
     ctx.fillRect(bumper.x - bumper.size, height - 15, 2 * bumper.size, 15)
 }
